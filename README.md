@@ -39,7 +39,8 @@ evidence/               Alert screenshots + notes, one per detection
 
 | # | Screenshot | What I saw / false positives |
 |---|---|---|
-| 0 | `evidence/00-sysmon-installed.png` | Sysmon 15.22 installed with the SwiftOnSecurity config; service running |
+| 0 | [Sysmon installed](evidence/00-sysmon-installed.webp) · [Operational log](evidence/00-sysmon-operational-log.png) | Sysmon 15.22 + SwiftOnSecurity config, service Running, 7,448 events logged |
+| 0b | [Wazuh pipeline + MITRE](evidence/01-wazuh-pipeline-mitre.webp) | Agent → manager → indexer → dashboard working; ~4,000 alerts mapped to ATT&CK (Account Discovery, PowerShell, Command Shell…). Debugging note: the dashboard showed nothing until I found the Windows clock was ~5.5 h off, so every event looked like it came from the future. Fixed with time sync. |
 | 1 | | |
 | 2 | | |
 | 3 | | |
