@@ -41,7 +41,7 @@ evidence/               Alert screenshots + notes, one per detection
 |---|---|---|
 | 0 | [Sysmon installed](evidence/00-sysmon-installed.webp) · [Operational log](evidence/00-sysmon-operational-log.png) | Sysmon 15.22 + SwiftOnSecurity config, service Running, 7,448 events logged |
 | 0b | [Wazuh pipeline + MITRE](evidence/01-wazuh-pipeline-mitre.webp) | Agent → manager → indexer → dashboard working; ~4,000 alerts mapped to ATT&CK (Account Discovery, PowerShell, Command Shell…). Debugging note: the dashboard showed nothing until I found the Windows clock was ~5.5 h off, so every event looked like it came from the future. Fixed with time sync. |
-| 0c | [Triage: level ≥12 alerts](evidence/02-triage-level12-plus.webp) | Triaged 6 high alerts: `whoami` = benign true positive (my test); rule 92213 = false positive (PowerShell policy test file), tuned with rule 100110; rule 204 = agent queue flood after restart; rule 92058 (sdbinst.exe) under review. |
+| 0c | [Triage: level ≥12 alerts](evidence/02-triage-level12-plus.webp) | Triaged 6 high alerts: `whoami` = benign true positive (my test); rule 92213 = false positive (PowerShell policy test file), tuned with rule 100110; rule 204 = agent queue flood after restart; rule 92058 (`sdbinst.exe`, T1546.011) = benign true positive: the only installed shim is Microsoft's "Application Compatibility Fix Database" in `C:\Windows\AppPatch\CustomSDB\`, installed 31 Aug 2026 for ASUS/Windows compatibility. Gap found: process command lines weren't logged for this event, so enabling command-line logging is a follow-up. |
 | 1 | | |
 | 2 | | |
 | 3 | | |
