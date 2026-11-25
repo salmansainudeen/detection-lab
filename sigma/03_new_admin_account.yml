@@ -1,0 +1,21 @@
+title: User Added to Local Administrators
+status: experimental
+description: A new account is created (4720) or an account is added to the local Administrators group (4732).
+author: Salman Sainudeen
+date: 2026-11-25
+tags:
+    - attack.persistence
+    - attack.t1136.001
+    - attack.t1098
+logsource:
+    product: windows
+    service: security
+detection:
+    selection:
+        EventID:
+            - 4720
+            - 4732
+    condition: selection
+falsepositives:
+    - Legitimate IT onboarding; confirm against a change ticket.
+level: high

@@ -1,0 +1,21 @@
+title: Kerberoasting - RC4 Service Ticket Request
+status: experimental
+description: A Kerberos service ticket (4769) requested with RC4 encryption (0x17) for a non-machine account.
+author: Salman Sainudeen
+date: 2026-11-25
+tags:
+    - attack.credential_access
+    - attack.t1558.003
+logsource:
+    product: windows
+    service: security
+detection:
+    selection:
+        EventID: 4769
+        TicketEncryptionType: '0x17'
+    filter_machine:
+        ServiceName|endswith: '$'
+    condition: selection and not filter_machine
+falsepositives:
+    - Legacy applications that only support RC4.
+level: high

@@ -1,0 +1,24 @@
+title: Suspicious PowerShell Script Block
+status: experimental
+description: PowerShell script block logging (4104) shows a download cradle, encoded command or Invoke-Expression.
+author: Salman Sainudeen
+date: 2026-11-25
+tags:
+    - attack.execution
+    - attack.t1059.001
+logsource:
+    product: windows
+    service: powershell
+detection:
+    selection:
+        EventID: 4104
+        ScriptBlockText|contains:
+            - 'DownloadString'
+            - 'FromBase64String'
+            - 'Invoke-Expression'
+            - 'IEX'
+            - 'Net.WebClient'
+    condition: selection
+falsepositives:
+    - Admin and deployment scripts that download modules; build an allowlist.
+level: high

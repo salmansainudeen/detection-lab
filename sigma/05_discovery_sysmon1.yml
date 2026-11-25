@@ -1,0 +1,25 @@
+title: Discovery Commands via Sysmon Process Creation
+status: experimental
+description: Sysmon Event ID 1 shows a built-in discovery tool (whoami, net, nltest, systeminfo).
+author: Salman Sainudeen
+date: 2026-11-25
+tags:
+    - attack.discovery
+    - attack.t1033
+    - attack.t1087
+logsource:
+    product: windows
+    service: sysmon
+detection:
+    selection:
+        EventID: 1
+        Image|endswith:
+            - '\whoami.exe'
+            - '\net.exe'
+            - '\net1.exe'
+            - '\nltest.exe'
+            - '\systeminfo.exe'
+    condition: selection
+falsepositives:
+    - Very common from admins and IT tools; low severity, valuable when chained with other alerts.
+level: low

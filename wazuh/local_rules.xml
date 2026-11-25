@@ -1,0 +1,79 @@
+<!--
+  detection-lab: custom Wazuh rules (add to /var/ossec/etc/rules/local_rules.xml on the manager,
+  then: systemctl restart wazuh-manager). Tested target: Wazuh 4.x, Windows agent.
+
+  Needs these channels collected in the agent's ossec.conf (see README):
+    Security, Microsoft-Windows-Sysmon/Operational, Microsoft-Windows-PowerShell/Operational
+
+  Rule IDs 100100-100199 are reserved for local rules.
+  Field names follow Wazuh's windows_eventchannel decoder (win.system.*, win.eventdata.*).
+  If a rule doesn't fire, check the decoded field names in the alert JSON and adjust.
+-->
+<group name="detection_lab,windows,">
+
+  <!-- 1. Brute force: 5+ failed logons (4625) from the same source IP within 2 minutes. -->
+  <!-- 60122 = Wazuh built-in "Logon failure - unknown user or bad password". -->
+  <rule id="100101" level="10" frequency="5" timeframe="120">
+    <if_matched_sid>60122</if_matched_sid>
+    <same_field>win.eventdata.ipAddress</same_field>
+    <description>detection-lab: possible brute force, 5+ failed logons from $(win.eventdata.ipAddress) in 2 min</description>
+    <mitre><id>T1110.001</id></mitre>
+  </rule>
+
+  <!-- 2. Password spray: failed logons from one IP against 5+ DIFFERENT usernames in 10 minutes. -->
+  <rule id="100102" level="10" frequency="5" timeframe="600">
+    <if_matched_sid>60122</if_matched_sid>
+    <same_field>win.eventdata.ipAddress</same_field>
+    <different_field>win.eventdata.targetUserName</different_field>
+    <description>detection-lab: possible password spray from $(win.eventdata.ipAddress) against multiple accounts</description>
+    <mitre><id>T1110.003</id></mitre>
+  </rule>
+
+  <!-- 3a. New local user account created (4720). -->
+  <rule id="100103" level="8">
+    <decoded_as>windows_eventchannel</decoded_as>
+    <field name="win.system.eventID">^4720$</field>
+    <description>detection-lab: new user account created: $(win.eventdata.targetUserName) by $(win.eventdata.subjectUserName)</description>
+    <mitre><id>T1136.001</id></mitre>
+  </rule>
+
+  <!-- 3b. User added to the local Administrators group (4732). Higher level: this is privilege. -->
+  <rule id="100104" level="12">
+    <decoded_as>windows_eventchannel</decoded_as>
+    <field name="win.system.eventID">^4732$</field>
+    <field name="win.eventdata.targetUserName">^Administrators$</field>
+    <description>detection-lab: account added to local Administrators by $(win.eventdata.subjectUserName)</description>
+    <mitre><id>T1098</id></mitre>
+  </rule>
+
+  <!-- 4. Suspicious PowerShell script block (4104): download cradles, encoded commands, IEX. -->
+  <rule id="100105" level="12">
+    <decoded_as>windows_eventchannel</decoded_as>
+    <field name="win.system.eventID">^4104$</field>
+    <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)(downloadstring|downloadfile|invoke-expression|\biex\b|frombase64string|-encodedcommand|net\.webclient|invoke-webrequest.+\|\s*iex)</field>
+    <description>detection-lab: suspicious PowerShell script block (download / encoded / IEX)</description>
+    <mitre><id>T1059.001</id></mitre>
+  </rule>
+
+  <!-- 5. Discovery commands seen by Sysmon process creation (Event ID 1). -->
+  <rule id="100106" level="6">
+    <decoded_as>windows_eventchannel</decoded_as>
+    <field name="win.system.channel">^Microsoft-Windows-Sysmon/Operational$</field>
+    <field name="win.system.eventID">^1$</field>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\(whoami|net1?|nltest|systeminfo|ipconfig|quser|tasklist)\.exe$</field>
+    <description>detection-lab: discovery command $(win.eventdata.image) run by $(win.eventdata.user)</description>
+    <mitre><id>T1033</id><id>T1087</id></mitre>
+  </rule>
+
+  <!-- 6. Kerberoasting: service ticket requested with RC4 encryption (4769, type 0x17). -->
+  <!-- Needs a domain controller (AD lab). Excludes machine accounts ending in $. -->
+  <rule id="100107" level="12">
+    <decoded_as>windows_eventchannel</decoded_as>
+    <field name="win.system.eventID">^4769$</field>
+    <field name="win.eventdata.ticketEncryptionType">^0x17$</field>
+    <field name="win.eventdata.serviceName" negate="yes">\$$</field>
+    <description>detection-lab: possible Kerberoasting, RC4 service ticket for $(win.eventdata.serviceName)</description>
+    <mitre><id>T1558.003</id></mitre>
+  </rule>
+
+</group>
