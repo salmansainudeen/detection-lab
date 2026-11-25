@@ -48,6 +48,13 @@ evidence/               Alert screenshots + notes, one per detection
 | 5 | | |
 | 6 | | |
 
+
+## Tuning log
+
+| Date | Noisy rule | Root cause | Fix |
+|---|---|---|---|
+| 25 Nov 2026 | 92213 (level 15): "Executable file dropped in folder commonly used by malware" | PowerShell writes `__PSScriptPolicyTest_<random>.ps1` to `%TEMP%` at every start to test the execution policy. **False positive.** | Child rule **100110** (level 0) silences only that exact filename pattern written by `powershell.exe`/`pwsh.exe`. Any other drop into Temp still fires at level 15. |
+
 ## What I learned
 
 > _Write this after testing: what surprised you, what you tuned, what didn't fire first time and why._

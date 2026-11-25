@@ -76,4 +76,15 @@
     <mitre><id>T1558.003</id></mitre>
   </rule>
 
+  <!-- TUNING (25 Nov): rule 92213 (level 15, "executable dropped in malware folder") fired every time
+       PowerShell started. PowerShell writes __PSScriptPolicyTest_<8>.<3>.ps1 to %TEMP% to test the
+       execution policy, then deletes it. Silence ONLY that exact pattern written by powershell/pwsh;
+       any other file dropped into Temp still alerts at level 15. -->
+  <rule id="100110" level="0">
+    <if_sid>92213</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\(powershell|pwsh)\.exe$</field>
+    <field name="win.eventdata.targetFilename" type="pcre2">(?i)\\AppData\\Local\\Temp\\__PSScriptPolicyTest_[a-z0-9]{8}\.[a-z0-9]{3}\.ps1$</field>
+    <description>detection-lab tuning: PowerShell execution-policy test file (benign)</description>
+  </rule>
+
 </group>
